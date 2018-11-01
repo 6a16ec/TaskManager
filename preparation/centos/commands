@@ -8,4 +8,4 @@ sudo yum -y install https://centos7.iuscommunity.org/ius-release.rpm
 sudo yum -y install python36u-pip
 sudo pip3.6 install --upgrade pip
 
-sudo pip install -U -r TaskManager/preparation/centos/requirements.txt
+sudo pip3.6 install -U -r TaskManager/preparation/centos/requirements.txt
