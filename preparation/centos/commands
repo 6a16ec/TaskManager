@@ -1,4 +1,4 @@
-sudo yum install git
+sudo yum -y install git
 git clone https://github.com/6a16ec/TaskManager.git
 
 sudo yum -y install epel-release
