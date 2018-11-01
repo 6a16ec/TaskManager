@@ -1,0 +1,16 @@
+apt-get -y install software-properties-common
+add-apt-repository ppa:deadsnakes/ppa
+apt update
+apt -y install python3.6
+
+apt -y install python3-pip
+
+
+sudo apt update
+sudo apt -y install python3.6
+sudo apt -y install python3.6-dev
+sudo apt -y install python3.6-venv
+wget https://bootstrap.pypa.io/get-pip.py
+sudo python3.6 get-pip.py
+sudo ln -s /usr/bin/python3.6 /usr/local/bin/python3
+sudo ln -s /usr/local/bin/pip /usr/local/bin/pip3
