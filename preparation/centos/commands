@@ -1,8 +1,10 @@
-yum -y install epel-release
-yum -y install python36
+sudo yum install git
 
-yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-yum -y install python36u-pip
-pip3.6 install --upgrade pip
+sudo yum -y install epel-release
+sudo yum -y install python36
 
-pip install -U -r requirements.txt
+sudo yum -y install https://centos7.iuscommunity.org/ius-release.rpm
+sudo yum -y install python36u-pip
+sudo pip3.6 install --upgrade pip
+
+sudo pip install -U -r requirements.txt
