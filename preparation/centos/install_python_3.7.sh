@@ -1,3 +1,5 @@
+// ???
+
 yum -y install gcc openssl-devel bzip2-devel  libffi-devel
 
 cd /usr/src
@@ -9,5 +11,3 @@ cd Python-3.7.0
 make altinstall
 
 rm -f /usr/src/Python-3.7.0.tgz
-
-pip3.6 install --upgrade pip
