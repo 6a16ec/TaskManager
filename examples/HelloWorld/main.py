@@ -1,22 +1,21 @@
-from aiogram import Bot, Dispatcher, executor, types
-import config.py
+from aiogram import Bot, types, Dispatcher
+from aiogram.utils import executor
+import config
 
-def main():
-
-    bot = Bot(token = config.telegram_token)
-    dp = Dispatcher(bot)
-
-    @dp.message_handler(commands=['start'])
-    @rate_limit(5, 'start')  # this is not required but you can configure throttling manager for current handler using it
-    async def cmd_test(message: types.Message):
-        # You can use this command every 5 seconds
-        await message.reply('Test passed! You can use this command every 5 seconds.')
+bot = Bot(token = config.telegram_token)
+dp = Dispatcher(bot)
 
 
-    @dp.message_handler()
-    async def echo(message: types.Message):
-        await bot.send_message(message.chat.id, message.text)
+
+@dp.message_handler(commands=['start', 'about'])
+async def cats(message: types.Message):
+    print("ok")
+    await bot.send_message(message.chat.id, "И тебе привет")
 
 
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+@dp.message_handler()
+async def echo(message: types.Message):
+    await bot.send_message(message.chat.id, message.text)
+
+
+executor.start_polling(dp, skip_updates=True)

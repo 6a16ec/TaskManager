@@ -1,6 +1,6 @@
 yum -y install git
 git clone https://github.com/6a16ec/TaskManager.git
 
-sh install_python_stable.sh
+sh TaskManager/preparation/centos/install_python_stable.sh
 
 pip3 install -U -r TaskManager/preparation/centos/requirements_aiogram_stable.txt
