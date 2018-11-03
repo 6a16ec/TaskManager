@@ -4,3 +4,4 @@ git clone https://github.com/6a16ec/TaskManager.git
 sh TaskManager/preparation/centos/install_python_stable.sh
 
 pip3 install -U -r TaskManager/preparation/centos/requirements_aiogram_stable.txt
+pip3 install -U -r TaskManager/preparation/centos/requirements_postgresql_stable.txt
