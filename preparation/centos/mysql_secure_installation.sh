@@ -274,14 +274,10 @@ get_root_password() {
 }
 
 set_root_password() {
-    stty -echo
-    echo $echo_n "New password: $echo_c"
-    read password1
-    echo
-    echo $echo_n "Re-enter new password: $echo_c"
-    read password2
-    echo
-    stty echo
+    password1='default_password_centos_000'
+    password2='default_password_centos_000'
+
+    echo "$password1"
 
     if [ "$password1" != "$password2" ]; then
         echo "Sorry, passwords do not match."
@@ -356,6 +352,17 @@ remove_test_database() {
     return 0
 }
 
+create_database() {
+    echo " - Creating database database..."
+    do_query "CREATE DATABASE IF NOT EXISTS main;"
+    if [ $? -eq 0 ]; then
+        echo " ... Success!"
+    else
+        echo " ... Failed!  Not critical, keep moving..."
+    fi
+    return 0
+}
+
 reload_privilege_tables() {
     do_query "FLUSH PRIVILEGES;"
     if [ $? -eq 0 ]; then
@@ -392,138 +399,18 @@ clean_and_exit() {
 prepare
 set_echo_compat
 
-echo
-echo "NOTE: RUNNING ALL PARTS OF THIS SCRIPT IS RECOMMENDED FOR ALL MariaDB"
-echo "      SERVERS IN PRODUCTION USE!  PLEASE READ EACH STEP CAREFULLY!"
-echo
-echo "In order to log into MariaDB to secure it, we'll need the current"
-echo "password for the root user.  If you've just installed MariaDB, and"
-echo "you haven't set the root password yet, the password will be blank,"
-echo "so you should just press enter here."
-echo
 
-get_root_password
+set_root_password
 
+remove_anonymous_users
 
-#
-# Set the root password
-#
+remove_remote_root
 
-echo "Setting the root password ensures that nobody can log into the MariaDB"
-echo "root user without the proper authorisation."
-echo
+remove_test_database
 
-while true ; do
-    if [ $hadpass -eq 0 ]; then
-        echo $echo_n "Set root password? [Y/n] $echo_c"
-    else
-        echo "You already have a root password set, so you can safely answer 'n'."
-        echo
-        echo $echo_n "Change the root password? [Y/n] $echo_c"
-    fi
-    read reply
-    validate_reply $reply && break
-done
+create_database
 
-if [ "$reply" = "n" ]; then
-    echo " ... skipping."
-else
-    status=1
-    while [ $status -eq 1 ]; do
-        set_root_password
-        status=$?
-    done
-fi
-echo
-
-
-#
-# Remove anonymous users
-#
-
-echo "By default, a MariaDB installation has an anonymous user, allowing anyone"
-echo "to log into MariaDB without having to have a user account created for"
-echo "them.  This is intended only for testing, and to make the installation"
-echo "go a bit smoother.  You should remove them before moving into a"
-echo "production environment."
-echo
-
-while true ; do
-    echo $echo_n "Remove anonymous users? [Y/n] $echo_c"
-    read reply
-    validate_reply $reply && break
-done
-if [ "$reply" = "n" ]; then
-    echo " ... skipping."
-else
-    remove_anonymous_users
-fi
-echo
-
-
-#
-# Disallow remote root login
-#
-
-echo "Normally, root should only be allowed to connect from 'localhost'.  This"
-echo "ensures that someone cannot guess at the root password from the network."
-echo
-while true ; do
-    echo $echo_n "Disallow root login remotely? [Y/n] $echo_c"
-    read reply
-    validate_reply $reply && break
-done
-if [ "$reply" = "n" ]; then
-    echo " ... skipping."
-else
-    remove_remote_root
-fi
-echo
-
-
-#
-# Remove test database
-#
-
-echo "By default, MariaDB comes with a database named 'test' that anyone can"
-echo "access.  This is also intended only for testing, and should be removed"
-echo "before moving into a production environment."
-echo
-
-while true ; do
-    echo $echo_n "Remove test database and access to it? [Y/n] $echo_c"
-    read reply
-    validate_reply $reply && break
-done
-
-if [ "$reply" = "n" ]; then
-    echo " ... skipping."
-else
-    remove_test_database
-fi
-echo
-
-
-#
-# Reload privilege tables
-#
-
-echo "Reloading the privilege tables will ensure that all changes made so far"
-echo "will take effect immediately."
-echo
-
-while true ; do
-    echo $echo_n "Reload privilege tables now? [Y/n] $echo_c"
-    read reply
-    validate_reply $reply && break
-done
-
-if [ "$reply" = "n" ]; then
-    echo " ... skipping."
-else
-    reload_privilege_tables
-fi
-echo
+reload_privilege_tables
 
 cleanup
 
