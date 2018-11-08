@@ -8,19 +8,19 @@ class Table:
 
         self.table_name = name
 
-    def create(self, columns, types):
+    def create(self, fields, types):
 
-        columns_with_type = []
-        for i in range(len(columns)):
-            columns_with_type.append(columns[i] + " " + types[i])
+        fields_with_type = []
+        for i in range(len(fields)):
+            fields_with_type.append(fields[i] + " " + types[i])
 
-        columns_with_types_string = ", ".join(columns_with_type);
-        print(columns_with_types_string)
+        fields_with_types_string = ", ".join(fields_with_type);
+        print(fields_with_types_string)
 
         query = """CREATE TABLE"""
         query += """ """ + """IF NOT EXISTS"""
         query += """ """ + """`""" + self.table_name + """`"""
-        query += """ """ + """(""" + columns_with_types_string + """)"""
+        query += """ """ + """(""" + fields_with_types_string + """)"""
 
         self.cursor.execute(query)
         self.mariadb_connection.commit()
