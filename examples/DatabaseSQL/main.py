@@ -2,28 +2,31 @@ import mysql.connector as mariadb
 import config
 
 class Table:
-    def __init__(self, name):
+    def __init__(self, name, logging = False):
         self.mariadb_connection = mariadb.connect(user = config.username, password = config.password, database = config.database_name)
         self.cursor = self.mariadb_connection.cursor(buffered=True)
 
         self.table_name = name
+        self.logging = logging
+
+
+    def brackets(self, name):
+        name = """ """ + """`""" + name + """`"""
+        return name
 
     def create(self, fields, types):
-
         fields_with_type = []
         for i in range(len(fields)):
             fields_with_type.append(fields[i] + " " + types[i])
 
         fields_with_types_string = ", ".join(fields_with_type);
-        print(fields_with_types_string)
 
         query = """CREATE TABLE"""
         query += """ """ + """IF NOT EXISTS"""
-        query += """ """ + """`""" + self.table_name + """`"""
+        query += """ """ + self.brackets(self.table_name)
         query += """ """ + """(""" + fields_with_types_string + """)"""
 
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
+        self.send_query(query)
 
 
     def insert(self, parameters, values):
@@ -39,15 +42,12 @@ class Table:
         values_string = ", ".join(values)
 
         query = """INSERT INTO"""
-        query += """ """ + """`""" + self.table_name + """`"""
+        query += """ """ + self.brackets(self.table_name)
         query += """ """ + """(""" + parameters_string + """)"""
         query += """ """ + """VALUES"""
         query += """ """ + """(""" + values_string + """)"""
 
-        print(query)
-
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
+        self.send_query(query)
 
 
     def update(self, key_parameters, key_values, changing_parameters, changing_values):
@@ -72,16 +72,13 @@ class Table:
         changing_parameter_value_string = ", ".join(changing_parameter_value_array)
 
         query = """UPDATE"""
-        query += """ """ + """`""" + self.table_name + """`"""
+        query += """ """ + self.brackets(self.table_name)
         query += """ """ + """SET"""
         query += """ """ + changing_parameter_value_string
         query += """ """ + """WHERE"""
         query += """ """ + key_parameter_value_string
 
-        print(query)
-
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
+        self.send_query(query)
 
 
     def select(self, selected_parameters, key_parameters, key_values):
@@ -102,15 +99,11 @@ class Table:
         query = """SELECT"""
         query += """ """ + selected_parameters_string
         query += """ """ + """FROM"""
-        query += """ """ + """`""" + self.table_name + """`"""
+        query += """ """ + self.brackets(self.table_name)
         query += """ """ + """WHERE"""
         query += """ """ + key_parameter_value_string
 
-        print(query)
-
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
-        return self.cursor.fetchall()
+        return self.send_query(query, True)
 
     def delete(self, key_parameters, key_values):
         if (type(key_parameters) is not list): key_parameters = [key_parameters]
@@ -125,14 +118,21 @@ class Table:
         key_parameter_value_string = " and ".join(key_parameter_value_array)
 
         query = """DELETE FROM"""
-        query += """ """ + """`""" + self.table_name + """`"""
+        query += """ """ + self.brackets(self.table_name)
         query += """ """ + """WHERE"""
         query += """ """ + key_parameter_value_string
 
-        print(query)
+        self.send_query(query)
 
+
+    def send_query(self, query, answer = False):
+
+        if self.logging:
+            print(query)
         self.cursor.execute(query)
         self.mariadb_connection.commit()
+        if(answer == True):
+            return self.cursor.fetchall()
 
     def close(self):
         self.cursor.close()
@@ -142,7 +142,7 @@ class Table:
 
 
 def example():
-    test = Table("test");
+    test = Table("test", True);
     test.create(["id", "id_vk", "name", "message"], ["int(5) PRIMARY KEY AUTO_INCREMENT", "INT(15)", "VARCHAR(100)", "VARCHAR(4096)"])
 
     test.insert("id_vk", 12345)
