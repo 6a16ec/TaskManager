@@ -102,6 +102,16 @@ class Table:
         )
         return self.send_query(query, True)
 
+    def select_all(self, fields="*"):
+
+        fields = self.toArray(fields)
+
+        query = "SELECT {fields} FROM {table_name}".format(
+            fields=", ".join(fields),
+            table_name=self.brackets(self.table_name)
+        )
+        return self.send_query(query, True)
+
     def delete(self, key_fields, key_values):
 
         key_fields, key_values = self.toArray(key_fields, key_values)
@@ -150,6 +160,8 @@ def example():
     print(test.select("*", "name", "Nikita"))
 
     print("Max ID: ", test.select_by_max(["id", "id_vk", "name"], "id"))
+
+    print(test.select_all())
 
     test.close()
 
