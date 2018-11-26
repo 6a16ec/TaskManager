@@ -128,6 +128,16 @@ class Table:
 
         self.send_query(query)
 
+    def delete_table(self, sure = "?"):
+
+        if sure.lower() == "yes":
+            query = "DROP TABLE IF EXISTS {table_name}".format(
+                table_name=self.brackets(self.table_name)
+            )
+            self.send_query(query)
+        else:
+            print("Please, be careful...You tried to remove a table {table_name}".format(table_name=self.brackets(self.table_name)))
+
     def send_query(self, query, answer=False):
 
         if self.logging:
@@ -161,7 +171,9 @@ def example():
 
     print("Max ID: ", test.select_by_max(["id", "id_vk", "name"], "id"))
 
-    print(test.select_all())
+    print(test.select_all("id"))
+
+    test.delete_table("yes")
 
     test.close()
 
