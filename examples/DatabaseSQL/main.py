@@ -93,6 +93,22 @@ class Table:
         )
         return self.send_query(query, True)
 
+    def select_many_key(self, fields, key_field, key_values):
+
+        fields, key_field, key_values = self.toArray(fields, key_field, key_values)
+
+        keys = ["{field} = '{value}'".format(
+            field=key_field[0],
+            value=value
+        ) for value in key_values]
+
+        query = "SELECT {fields} FROM {table_name} WHERE {keys}".format(
+            fields=", ".join(fields),
+            table_name=self.brackets(self.table_name),
+            keys=" or ".join(keys)
+        )
+        return self.send_query(query, True)
+
     def select_by_max(self, fields, key_field):
 
         fields = self.toArray(fields)
