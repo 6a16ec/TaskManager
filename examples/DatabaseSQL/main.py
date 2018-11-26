@@ -43,11 +43,13 @@ class Table:
         fields, values = self.toArray(fields, values)
 
         values = ["'{value}'".format(value=value) for value in values]
+        # while values.find('None') != -1:
+        #     values[values.find('None')] = "NULL"
 
         query = "INSERT INTO {table_name} ({parameters}) VALUES ({values})".format(
             table_name=self.brackets(self.table_name),
             parameters=", ".join(fields),
-            values=", ".join(values)
+            values=", ".join(values).replace("'None'", "NULL") ### ))))
         )
 
         self.send_query(query)
@@ -169,11 +171,14 @@ def example():
     test.delete("id", 1)
     print(test.select("*", "name", "Nikita"))
 
-    print("Max ID: ", test.select_by_max(["id", "id_vk", "name"], "id"))
 
     print(test.select_all("id"))
 
-    test.delete_table("yes")
+    test.insert("name", None)
+
+    print("Max ID: ", test.select_by_max(["id", "id_vk", "name"], "id"))
+
+    # test.delete_table("yes")
 
     test.close()
 
