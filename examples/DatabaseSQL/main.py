@@ -89,7 +89,17 @@ class Table:
             table_name=self.brackets(self.table_name),
             keys=" and ".join(keys)
         )
+        return self.send_query(query, True)
 
+    def select_by_max(self, fields, key_field):
+
+        fields = self.toArray(fields)
+
+        query = "SELECT {fields} FROM {table_name} ORDER BY {key_field} DESC LIMIT 1".format(
+            fields=", ".join(fields),
+            table_name=self.brackets(self.table_name),
+            key_field=self.brackets(key_field)
+        )
         return self.send_query(query, True)
 
     def delete(self, key_fields, key_values):
@@ -138,6 +148,8 @@ def example():
 
     test.delete("id", 1)
     print(test.select("*", "name", "Nikita"))
+
+    print("Max ID: ", test.select_by_max(["id", "id_vk", "name"], "id"))
 
     test.close()
 
