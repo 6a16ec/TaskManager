@@ -33,7 +33,7 @@ def to2Array(object, toString = False):
     return array
 
 
-def createReply(array):
+def reply(array):
     array = to2Array(array, True)
     print(array)
 
@@ -45,7 +45,12 @@ def createReply(array):
     return keyboard
 
 
-def createInline(array, callback = None):
+def remove():
+    return types.ReplyKeyboardRemove()
+
+
+
+def inline(array, callback = None):
     array = to2Array(array)
     if callback != None:
         callback = to2Array(callback)
@@ -66,20 +71,6 @@ def createInline(array, callback = None):
 
     return keyboard
 
-#
-# class messageKeyboard:
-# 	def get(name):
-# 		kb = types.InlineKeyboardMarkup()
-# 		for keyboard in keyboards:
-# 			if(keyboard[0][0] == name):
-# 				for line_number in range(1, len(keyboard)):
-# 					buttons = []
-# 					for button in keyboard[line_number]:
-# 						buttons.append(types.InlineKeyboardButton(text = button, callback_data = button))
-# 						kb.add(*buttons)
-#
-# 		# kb.add(types.ReplyKeyboardRemove())
-# 		return kb
 
 if __name__ == "__main__":
     print("ok, hello")
