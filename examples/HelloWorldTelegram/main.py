@@ -1,16 +1,15 @@
 from aiogram import Bot, types, Dispatcher
 from aiogram.utils import executor
-import config
+import config, keyboard
 
-bot = Bot(token = config.telegram_token)
+bot = Bot(token=config.telegram_token)
 dp = Dispatcher(bot)
-
 
 
 @dp.message_handler(commands=['start', 'about'])
 async def cats(message: types.Message):
     print("ok")
-    await bot.send_message(message.chat.id, "И тебе привет")
+    await bot.send_message(message.chat.id, "И тебе привет!", reply_markup=keyboard.createInline("BUTTON"))
 
 
 @dp.message_handler()
