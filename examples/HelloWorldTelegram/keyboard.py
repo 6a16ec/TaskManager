@@ -70,14 +70,3 @@ def inline(array, callback = None):
         keyboard.add(*buttons)
 
     return keyboard
-
-
-if __name__ == "__main__":
-    print("ok, hello")
-    print(to2Array(None))
-    print(to2Array("string"))
-    print(to2Array(777))
-    print(to2Array([666, 555, 444, "str"]))
-    print([[0]])
-
-    print("eeee")
