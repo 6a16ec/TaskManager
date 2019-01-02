@@ -14,7 +14,7 @@ async def cats(message: types.Message):
 
 @dp.message_handler(func=lambda message: message.text == "Object #00001")
 async def object_00001(message):
-    await bot.send_message(message.chat.id, "Object #00001", reply_markup = keyboard.inline(["callback #00001", "callback #00002"]))
+    await bot.send_message(message.chat.id, "Object #00001", reply_markup = keyboard.inline(["callback #00001", "callback #00002"], ["callback new #00001", "callback new #00002"]))
 
 @dp.message_handler(func=lambda message: message.text == "Object #00002")
 async def object_00002(message):

@@ -35,10 +35,8 @@ def to2Array(object, toString = False):
 
 def reply(array):
     array = to2Array(array, True)
-    print(array)
 
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
     for line in array:
         keyboard.row(*line)
 
@@ -52,12 +50,11 @@ def remove():
 
 def inline(array, callback = None):
     array = to2Array(array)
-    if callback != None:
-        callback = to2Array(callback)
-    else:
+    if callback == None:
         callback = array
+    else:
+        callback = to2Array(callback)
 
-    print(array, callback)
 
     max_len = len(max(array, key=len))
     keyboard = types.InlineKeyboardMarkup(row_width = max_len)
