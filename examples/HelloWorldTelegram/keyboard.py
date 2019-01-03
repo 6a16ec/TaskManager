@@ -26,7 +26,6 @@ def to2Array(object, toString = False):
                     array[i][j] = str(object)
 
                 if type(array[i][j]) != type("string"):
-                    print(object, type(object))
                     array = [[]]
                     break
 
@@ -63,7 +62,6 @@ def inline(array, callback = None):
         for j, text in enumerate(line):
             button = types.InlineKeyboardButton(text = text, callback_data = callback[i][j])
             buttons.append(button)
-        print("new line")
         keyboard.add(*buttons)
 
     return keyboard
