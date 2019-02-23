@@ -1,202 +1,179 @@
 import mysql.connector as mariadb
 import config
 
+
 class Table:
-    def __init__(self, name):
-        self.mariadb_connection = mariadb.connect(user = config.username, password = config.password, database = config.database_name)
+    def __init__(self, name, logging=False):
+        self.mariadb_connection = mariadb.connect(user=config.username, password=config.password,
+                                                  database=config.database_name)
         self.cursor = self.mariadb_connection.cursor(buffered=True)
 
         self.table_name = name
-        self.table_name_sql = """`""" + self.table_name + """`"""
+        self.logging = logging
 
-    def create_table(self, fields, types):
+    def brackets(self, name):
+        name = """ """ + """`""" + name + """`"""
+        return name
 
-        fields_with_type = []
-        for i in range(len(fields)):
-            fields_with_type.append(fields[i] + " " + types[i])
-
-        fields_with_types_string = ", ".join(fields_with_type);
-        print(fields_with_types_string)
-
-        query = """CREATE TABLE"""
-        query += """ """ + """IF NOT EXISTS"""
-        query += """ """ + """`""" + self.table_name + """`"""
-        query += """ """ + """(""" + fields_with_types_string + """)"""
-
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
-
-
-    def insert(self, parameters, values):
-
-        if (type(parameters) is not list): parameters = [parameters]
-        if (type(values) is not list): values = [values]
-
-        for i in range(len(values)):
-            if(type(values[i]) is not str): values[i] = str(values[i])
-            values[i] = "'" + values[i] + "'";
-
-        parameters_string = ", ".join(parameters)
-        values_string = ", ".join(values)
-
-        query = """INSERT INTO"""
-        query += """ """ + """`""" + self.table_name + """`"""
-        query += """ """ + """(""" + parameters_string + """)"""
-        query += """ """ + """VALUES"""
-        query += """ """ + """(""" + values_string + """)"""
-
-        print(query)
-
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
-
-
-    def update(self, key_parameters, key_values, changing_parameters, changing_values):
-        if (type(key_parameters) is not list): key_parameters = [key_parameters]
-        if (type(key_values) is not list): key_values = [key_values]
-        if (type(changing_parameters) is not list): changing_parameters = [changing_parameters]
-        if (type(changing_values) is not list): changing_values = [changing_values]
-
-        for i in range(len(key_values)):
-            if(type(key_values[i]) is not str): key_values[i] = str(key_values[i])
-        for i in range(len(changing_values)):
-            if(type(changing_values[i]) is not str): changing_values[i] = str(changing_values[i])
-
-        key_parameter_value_array = []
-        for parameter, value in zip(key_parameters, key_values):
-            key_parameter_value_array.append(parameter + " = " + "'" + value + "'")
-        key_parameter_value_string = " and ".join(key_parameter_value_array)
-
-        changing_parameter_value_array = []
-        for parameter, value in zip(changing_parameters, changing_values):
-            changing_parameter_value_array.append(parameter + " = " + "'" + value + "'")
-        changing_parameter_value_string = ", ".join(changing_parameter_value_array)
-
-        query = """UPDATE"""
-        query += """ """ + """`""" + self.table_name + """`"""
-        query += """ """ + """SET"""
-        query += """ """ + changing_parameter_value_string
-        query += """ """ + """WHERE"""
-        query += """ """ + key_parameter_value_string
-
-        print(query)
-
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
-
-
-    def select(self, selected_parameters, key_parameters, key_values):
-        if (type(selected_parameters) is not list): selected_parameters = [selected_parameters]
-        if (type(key_parameters) is not list): key_parameters = [key_parameters]
-        if (type(key_values) is not list): key_values = [key_values]
-
-
-        for i, key_value in enumerate(key_values):
-            if(type(key_value) is list):
-                for j, element in enumerate(key_value):
-                    print(element)
-                    if(type(element) is not str): key_values[i][j] = str(key_values[i][j])
-                    key_values[i][j] = "'" + key_values[i][j] + "'"
+    def toArray(self, *objs):
+        objects = []
+        for obj in objs:
+            if type(obj) is list:
+                objects.append(obj)
             else:
-                if(type(key_value) is not str): key_values[i] = str(key_values[i])
-                key_values[i] = "'" + key_values[i] + "'"
+                objects.append([obj])
+        if len(objects) == 1:
+            objects = objects[0]
+        return objects
 
+    def create(self, fields, types):
 
+        fields, types = self.toArray(fields, types)
+        fields_with_types = [fields[i] + " " + type_ for i, type_ in enumerate(types)]
 
-        selected_parameters_string = ", ".join(selected_parameters)
+        query = "CREATE TABLE IF NOT EXISTS {table_name} ({fields_with_types})".format(
+            table_name=self.brackets(self.table_name),
+            fields_with_types=", ".join(fields_with_types)
+        )
 
-        key_parameter_value_array = []
-        for parameter, value in zip(key_parameters, key_values):
-            element = parameter;
-            print(value)
-            if(type(value) is list):
-                print("list!")
-                value = ", ".join(value)
-                element += " in " + "(" + value + ")"
-            else: element += " = " + value
-            key_parameter_value_array.append(element)
-        key_parameter_value_string = " and ".join(key_parameter_value_array)
+        self.send_query(query)
 
-        query = """SELECT"""
-        query += """ """ + selected_parameters_string
-        query += """ """ + """FROM"""
-        query += """ """ + """`""" + self.table_name + """`"""
-        query += """ """ + """WHERE"""
-        query += """ """ + key_parameter_value_string
+    def insert(self, fields, values):
 
-        print(query)
+        fields, values = self.toArray(fields, values)
 
+        values = ["'{value}'".format(value=value) for value in values]
+        # while values.find('None') != -1:
+        #     values[values.find('None')] = "NULL"
+
+        query = "INSERT INTO {table_name} ({parameters}) VALUES ({values})".format(
+            table_name=self.brackets(self.table_name),
+            parameters=", ".join(fields),
+            values=", ".join(values).replace("'None'", "NULL").replace("'False'", "False").replace("'True'", "True") ### ))))
+        )
+
+        self.send_query(query)
+
+    def update(self, key_fields, key_values, upd_fields, upd_values):
+
+        key_fields, key_values, upd_fields, upd_values = self.toArray(key_fields, key_values, upd_fields, upd_values)
+
+        # keys = [field + " = " + "'" + str(key_values[i]) + "'" for i, field in enumerate(key_fields)]
+        keys = ["{field} = '{value}'".format(
+            field=field,
+            value=key_values[i]
+        ) for i, field in enumerate(key_fields)]
+
+        updates = ["{field} = '{value}'".format(
+            field=field,
+            value=upd_values[i]
+        ) for i, field in enumerate(upd_fields)]
+
+        query = "UPDATE {table_name} SET {changes} WHERE {keys}".format(
+            table_name=self.brackets(self.table_name),
+            changes=", ".join(updates),
+            keys=" and ".join(keys)
+        )
+
+        self.send_query(query)
+
+    def select(self, fields, key_fields, key_values):
+
+        fields, key_fields, key_values = self.toArray(fields, key_fields, key_values)
+
+        keys = ["{field} = '{value}'".format(
+            field=field,
+            value=key_values[i]
+        ) for i, field in enumerate(key_fields)]
+
+        query = "SELECT {fields} FROM {table_name} WHERE {keys}".format(
+            fields=", ".join(fields),
+            table_name=self.brackets(self.table_name),
+            keys=" and ".join(keys)
+        )
+        return self.send_query(query, True)
+
+    def select_many_key(self, fields, key_field, key_values):
+
+        fields, key_field, key_values = self.toArray(fields, key_field, key_values)
+
+        keys = ["{field} = '{value}'".format(
+            field=key_field[0],
+            value=value
+        ) for value in key_values]
+
+        query = "SELECT {fields} FROM {table_name} WHERE {keys}".format(
+            fields=", ".join(fields),
+            table_name=self.brackets(self.table_name),
+            keys=" or ".join(keys)
+        )
+        return self.send_query(query, True)
+
+    def select_by_max(self, fields, key_field):
+
+        fields = self.toArray(fields)
+
+        query = "SELECT {fields} FROM {table_name} ORDER BY {key_field} DESC LIMIT 1".format(
+            fields=", ".join(fields),
+            table_name=self.brackets(self.table_name),
+            key_field=self.brackets(key_field)
+        )
+        return self.send_query(query, True)
+
+    def select_all(self, fields="*"):
+
+        fields = self.toArray(fields)
+
+        query = "SELECT {fields} FROM {table_name}".format(
+            fields=", ".join(fields),
+            table_name=self.brackets(self.table_name)
+        )
+        return self.send_query(query, True)
+
+    def delete(self, key_fields, key_values):
+
+        key_fields, key_values = self.toArray(key_fields, key_values)
+
+        keys = ["{field} = '{value}'".format(
+            field=field,
+            value=key_values[i]
+        ) for i, field in enumerate(key_fields)]
+
+        query = "DELETE FROM {table_name} WHERE {keys}".format(
+            table_name=self.brackets(self.table_name),
+            keys=" and ".join(keys)
+        )
+
+        self.send_query(query)
+
+    def delete_table(self, sure = "?"):
+
+        if sure.lower() == "yes":
+            query = "DROP TABLE IF EXISTS {table_name}".format(
+                table_name=self.brackets(self.table_name)
+            )
+            self.send_query(query)
+        else:
+            print("Please, be careful...You tried to remove a table {table_name}".format(table_name=self.brackets(self.table_name)))
+
+    def send_query(self, query, answer=False):
+
+        if self.logging:
+            print(query)
         self.cursor.execute(query)
         self.mariadb_connection.commit()
-        return self.cursor.fetchall()
-
-    def select_all(self, selected_parameters = "*"):
-        if (type(selected_parameters) is not list): selected_parameters = [selected_parameters]
-
-        selected_parameters_string = ", ".join(selected_parameters)
-
-        query = """SELECT"""
-        query += """ """ + selected_parameters_string
-        query += """ """ + """FROM"""
-        query += """ """ + """`""" + self.table_name + """`"""
-
-        print(query)
-
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
-        return self.cursor.fetchall()
-
-    def delete(self, key_parameters, key_values):
-        if (type(key_parameters) is not list): key_parameters = [key_parameters]
-        if (type(key_values) is not list): key_values = [key_values]
-
-        for i in range(len(key_values)):
-            if (type(key_values[i]) is not str): key_values[i] = str(key_values[i])
-
-        key_parameter_value_array = []
-        for parameter, value in zip(key_parameters, key_values):
-            key_parameter_value_array.append(parameter + " = " + "'" + value + "'")
-        key_parameter_value_string = " and ".join(key_parameter_value_array)
-
-        query = """DELETE FROM"""
-        query += """ """ + """`""" + self.table_name + """`"""
-        query += """ """ + """WHERE"""
-        query += """ """ + key_parameter_value_string
-
-        print(query)
-
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
+        if answer == True:
+            return self.cursor.fetchall()
 
     def close(self):
         self.cursor.close()
         self.mariadb_connection.close()
 
-    def delete_table(self, AreYouUnderstandTheResponsibility = "?"):
-
-        if(AreYouUnderstandTheResponsibility.lower() != "yes"):
-            print("Please, be careful...You tried to remove a table" + " " + self.table_name_sql)
-            return
-        #
-        # query = """IF EXISTS"""
-        # query += """ """ + """(""" + """SELECT * FROM""" + """ """ + """`""" + self.table_name + """`""" + """)"""
-        # query += """ """ + """DROP TABLE"""
-        # query += """ """ + """`""" + self.table_name + """`"""
-
-        query = """DROP TABLE"""
-        query += """ """ + "IF EXISTS"
-        query += """ """ + self.table_name_sql
-
-        print(query)
-
-        self.cursor.execute(query)
-        self.mariadb_connection.commit()
-
-
 
 def example():
-    test = Table("test");
-    test.create_table(["id", "id_vk", "name", "message"], ["int(5) PRIMARY KEY AUTO_INCREMENT", "INT(15)", "VARCHAR(100)", "VARCHAR(4096)"])
+    test = Table("test", True)
+    test.create(["id", "id_vk", "name", "message"],
+                ["int(5) PRIMARY KEY AUTO_INCREMENT", "INT(15)", "VARCHAR(100)", "VARCHAR(4096)"])
 
     test.insert("id_vk", 12345)
     test.insert(["id_vk", "name", "message"], [777777, "Nikita", "Hi, how are you"])
@@ -210,83 +187,18 @@ def example():
     test.delete("id", 1)
     print(test.select("*", "name", "Nikita"))
 
+
+    print(test.select_all("id"))
+
+    test.insert("name", None)
+
+    print("Max ID: ", test.select_by_max(["id", "id_vk", "name"], "id"))
+
+    print(test.select_many_key(["id", "id_vk", "name"], "id", [1, 2, 3, 4, 5]))
+
+    # test.delete_table("yes")
+
     test.close()
 
-def keyboard_init():
-    table = Table("buttons")
-    table.create_table(["id", "text", "callback"], ["int(5) PRIMARY KEY AUTO_INCREMENT", "VARCHAR(128)", "VARCHAR(128)"])
-    table.close()
 
-    table = Table("keyboard")
-    table.create_table(["id", "name", "is_inline"], ["int(5) PRIMARY KEY AUTO_INCREMENT", "VARCHAR(128)", "BOOLEAN DEFAULT false"])
-    table.close()
-
-    table = Table("bundles")
-    table.create_table(["id_keyboard", "id_prev_button", "id_button", "last_in_line"], ["INT(5)", "INT(5)", "INT(5)", "BOOLEAN DEFAULT false"])
-    table.close()
-
-def keyboard_init_data():
-    table = Table("buttons")
-    table.insert("text", "first-first")
-    table.insert("text", "second-first")
-    table.insert("text", "second-second")
-    table.close()
-
-    table = Table("keyboard")
-    table.insert("name", "test")
-    table.close()
-
-    table = Table("bundles")
-    table.insert(["id_keyboard", "id_prev_button", "id_button", "last_in_line"], [1, 0, 1, 1])
-    table.insert(["id_keyboard", "id_prev_button", "id_button"], [1, 1, 2])
-    table.insert(["id_keyboard", "id_prev_button", "id_button"], [1, 2, 3])
-    table.close()
-
-def keyboard_init_read():
-    table = Table("buttons")
-    print(table.select_all())
-    table.close()
-
-    table = Table("keyboard")
-    print(table.select_all())
-    table.close()
-
-    table = Table("bundles")
-    print(table.select_all())
-    table.close()
-
-def keyboard_init_delete():
-    table = Table("buttons")
-    table.delete_table("Yes")
-    table.close()
-
-    table = Table("keyboard")
-    table.delete_table("Yes")
-    table.close()
-
-    table = Table("bundles")
-    table.delete_table("Yes")
-    table.close()
-
-
-def test():
-    table = Table("buttons")
-    print(table.select("*", "id", [[1, 2]]))
-    table.close()
-
-
-# if(__name__ == "__main__"): example()
-# if(__name__ == "__main__"): keyboard_init()
-# if(__name__ == "__main__"): keyboard_init_data()
-# if(__name__ == "__main__"): keyboard_init_read()
-#
-# if(__name__ == "__main__"):
-#     keyboard_init()
-#     keyboard_init_data()
-#     keyboard_init_read()
-
-# if(__name__ == "__main__"): keyboard_init_delete()
-
-if(__name__ == "__main__"): test()
-
-
+if (__name__ == "__main__"): example()
