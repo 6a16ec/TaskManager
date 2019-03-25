@@ -1,0 +1,21 @@
+cd /root
+
+yum -y install git
+git clone https://github.com/6a16ec/preparation.git
+yum -y remove git
+yum clean all
+
+cd /root/preparation/centos/
+
+cd ./mariadb && sh ./install_mariadb.sh
+cd /root/preparation/centos/
+cd ./python && sh ./install_python_3.6.sh
+cd /root/preparation/centos/
+
+pip3 install -U -r ./python/requirements/aiogram_1.4.txt
+pip3 install -U -r ./python/requirements/mysql.txt
+
+cd /root
+
+
+// mysql -u root -p
